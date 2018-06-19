@@ -1,14 +1,14 @@
-bmcgehee/example-node-docker:
-  # Distelli Manifest example  
-  
-  PreBuild:     
-    # Add any build pre-requisites here 
+rhyza.velasco/example-node-docker:
+  # Distelli Manifest example
+
+  PreBuild:
+    # Add any build pre-requisites here
     #- echo "---PreBuild---"
-    
+
   Build:
     # Enter your build steps here!
     - docker login -u "$DISTELLI_DOCKER_USERNAME" -p "$DISTELLI_DOCKER_PW" -e "$DISTELLI_DOCKER_EMAIL" $DISTELLI_DOCKER_ENDPOINT
-    
+
 
     # use nvm (node version manager)
     - source ~/.nvm/nvm.sh
@@ -16,33 +16,33 @@ bmcgehee/example-node-docker:
     #- nvm install v4.4.7
     # Install node v6.9.4
     - nvm install v6.9.4
-    # install latest npm version globlaly 
-    - npm install npm -g   
+    # install latest npm version globlaly
+    - npm install npm -g
 
-    #- echo "---Building---"   
-    - npm install 
+    #- echo "---Building---"
+    - npm install
     #- echo "--Testing--"
     - npm test
 
     - echo "--Creating Docker Image--"
     - docker build --quiet=false -t "$DISTELLI_DOCKER_REPO" "$DISTELLI_DOCKER_PATH"
-    - docker tag "$DISTELLI_DOCKER_REPO" "$DISTELLI_DOCKER_REPO:$DISTELLI_BUILDNUM" 
+    - docker tag "$DISTELLI_DOCKER_REPO" "$DISTELLI_DOCKER_REPO:$DISTELLI_BUILDNUM"
     - echo "--Pushing Docker Image--"
     - docker push "$DISTELLI_DOCKER_REPO:$DISTELLI_BUILDNUM"
-   
+
   PkgInclude:
     - '*'
 
-  ###Below is deployment phases   
-  
+  ###Below is deployment phases
+
   Env:
-    # Set any environment variables in this section.   
+    # Set any environment variables in this section.
     # These are available during all phases of a deploy.
     - PORT: "3001"
     - FINDPORT_LOOP_CNT: "60"
     - FINDPORT_SLEEP: "2"
 
-  PreInstall:  
+  PreInstall:
     # Use this section to install any deployment pre-requisites.
     - echo "---PreInstall---"
     - sudo docker login -u "$DISTELLI_DOCKER_USERNAME" -p "$DISTELLI_DOCKER_PW" -e "$DISTELLI_DOCKER_EMAIL" $DISTELLI_DOCKER_ENDPOINT
@@ -51,7 +51,7 @@ bmcgehee/example-node-docker:
     - sudo apt-get -y clean
     - sudo apt-get -y update
     - echo "-Installing nodejs-"
-    - sudo apt-get -y install nodejs 
+    - sudo apt-get -y install nodejs
 
   PostInstall:
     - echo "---PostInstall---"
@@ -71,15 +71,15 @@ bmcgehee/example-node-docker:
     - echo "docker run $DISTELLI_DOCKER_ENVS"
     - echo "MYSQL_USERNAME=$MYSQL_USERNAME"
     - sudo env
-    
+
     - cid=$(uuidgen)
     - trap 'sudo docker stop $cid' SIGTERM
     - echo "sudo -E docker run --name=$cid $DISTELLI_DOCKER_ENVS --rm=true $DISTELLI_DOCKER_PORTS  $DISTELLI_DOCKER_REPO:$DISTELLI_BUILDNUM"
     - (sudo -E docker run --name=$cid $DISTELLI_DOCKER_ENVS --rm=true $DISTELLI_DOCKER_PORTS  "$DISTELLI_DOCKER_REPO:$DISTELLI_BUILDNUM") &
-   
+
     - wait
     - "true"
-    
+
   PostStart:
     - echo "---PostStart---"
     - time_amount=$(($FINDPORT_LOOP_CNT * $FINDPORT_SLEEP))
@@ -103,4 +103,3 @@ bmcgehee/example-node-docker:
     - echo "The service appears to be up."
     - publicip=$(curl -s ident.me) || true
     - 'echo "You can validate the install by pointing your browser at http://$publicip:$PORT"'
-
